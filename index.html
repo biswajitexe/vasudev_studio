@@ -154,7 +154,14 @@
                 <div class="glass p-8 flex flex-col gap-8">
                     <div class="flex justify-between items-center">
                         <span class="text-[10px] text-white/30 uppercase font-black tracking-widest">Chromatic Engine</span>
-                        <button onclick="shufflePalette()" class="text-[10px] font-black uppercase text-cyan-400 hover:text-white transition-colors">Shuffle</button>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2 bg-white/5 rounded-lg p-1 border border-white/5">
+                                <button onclick="removePoint()" class="w-6 h-6 flex items-center justify-center text-white/40 hover:text-white transition-colors">-</button>
+                                <span id="point-count" class="text-[10px] font-bold w-4 text-center">3</span>
+                                <button onclick="addPoint()" class="w-6 h-6 flex items-center justify-center text-white/40 hover:text-white transition-colors">+</button>
+                            </div>
+                            <button onclick="shufflePalette()" class="text-[10px] font-black uppercase text-cyan-400 hover:text-white transition-colors">Shuffle</button>
+                        </div>
                     </div>
                     <div class="flex items-center justify-between">
                         <div class="flex gap-4">
@@ -212,10 +219,10 @@
                         <input type="text" id="asset-name" placeholder="studio-export-01" class="flex-grow bg-white/5 border border-white/10 rounded-2xl p-5 text-sm font-bold text-white outline-none focus:border-cyan-400 transition-all">
                         <button onclick="setQuality(4)" id="q-4" class="pill !py-0 !px-6 hover:bg-white hover:text-black">4K</button>
                     </div>
-                    <button onclick="downloadImage()" class="btn-primary w-full flex items-center justify-center gap-4 group">
-                        <span>Process & Download</span>
-                        <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                    </button>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="copyCSS()" class="py-4 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all">Copy CSS</button>
+                        <button onclick="downloadImage()" class="py-4 rounded-xl bg-white text-black text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all">Download PNG</button>
+                    </div>
                 </div>
 
             </div>
@@ -236,26 +243,64 @@
         ];
 
         function animate() {
-            const fluidSpeed = (rs.value) / 1000;
             points.forEach((p, i) => {
                 const el = document.getElementById(p.id);
-                p.tx += Math.sin(Date.now() * 0.001 + i) * 0.1;
-                p.ty += Math.cos(Date.now() * 0.0012 + i) * 0.1;
-                p.vx += (p.tx - p.x) * fluidSpeed;
-                p.vy += (p.ty - p.y) * fluidSpeed;
-                p.vx *= 0.95; p.vy *= 0.95;
-                p.x += p.vx; p.y += p.vy;
-                
-                if (p.x < -10) p.x = 110; if (p.x > 110) p.x = -10;
-                if (p.y < -10) p.y = 110; if (p.y > 110) p.y = -10;
-
-                el.style.left = `${p.x}%`;
-                el.style.top = `${p.y}%`;
-                el.style.transform = `scale(${1 + Math.sin(Date.now() * 0.002 + i) * 0.1})`;
+                if (el) {
+                    el.style.left = `${p.x}%`;
+                    el.style.top = `${p.y}%`;
+                    el.style.background = `var(--p${(i % 3) + 1})`;
+                }
             });
-            requestAnimationFrame(animate);
         }
         animate();
+
+        window.addPoint = () => {
+            if (points.length >= 8) return;
+            const id = `m${points.length + 1}`;
+            const newPoint = { id, x: Math.random()*80 + 10, y: Math.random()*80 + 10 };
+            points.push(newPoint);
+            
+            const el = document.createElement('div');
+            el.id = id;
+            el.className = 'mesh-point';
+            document.querySelector('.mesh-container').appendChild(el);
+            
+            document.getElementById('point-count').innerText = points.length;
+            animate();
+        }
+
+        window.removePoint = () => {
+            if (points.length <= 2) return;
+            const p = points.pop();
+            const el = document.getElementById(p.id);
+            if (el) el.remove();
+            document.getElementById('point-count').innerText = points.length;
+        }
+
+        window.copyCSS = () => {
+            const colors = [c1.value, c2.value, c3.value];
+            const gradient = `background-color: ${c3.value};\nbackground-image: \n  ${points.map((p, i) => `radial-gradient(at ${Math.round(p.x)}% ${Math.round(p.y)}%, ${colors[i % 3]} 0px, transparent 50%)`).join(',\n  ')};`;
+            navigator.clipboard.writeText(gradient);
+            alert("CSS Gradient Code Copied!");
+        }
+
+        window.shufflePalette = () => {
+            const randomHex = () => '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+            setPreset(randomHex(), randomHex(), '#020205');
+        }
+
+        window.setRatio = (ratio) => {
+            trigger.style.aspectRatio = ratio.replace('-', '/');
+            document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('active'));
+            const btnId = `btn-${ratio}`;
+            if(document.getElementById(btnId)) document.getElementById(btnId).classList.add('active');
+        }
+
+        window.openTokens = () => {
+            const vars = `:root {\n  --p1: ${c1.value};\n  --p2: ${c2.value};\n  --p3: ${c3.value};\n  --grain: ${rg.value}%;\n  --points: ${points.length};\n}`;
+            alert("Design Tokens Copied to Clipboard!\n\n" + vars);
+            navigator.clipboard.writeText(vars);
+        }
 
         window.updateColors = () => {
             document.documentElement.style.setProperty('--p1', c1.value);

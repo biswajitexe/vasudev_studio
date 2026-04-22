@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vasudev Studio | Professional Visual Lab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vasudev Studio | Visual Engine 3.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image-more/3.1.6/dom-to-image-more.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,700;0,800;1,800&display=swap" rel="stylesheet">
@@ -12,259 +12,240 @@
             --p1: #00f0ff; --p2: #8b5cf6; --p3: #020617;
             --p1-glow: rgba(0, 240, 255, 0.2);
             --bg: #020205;
+            --aspect: 16/9;
         }
         
-        * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
-        *::-webkit-scrollbar { display: none !important; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        *::-webkit-scrollbar { display: none; }
+        body { background: var(--bg); color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
 
-        body { 
-            background: var(--bg); 
-            color: #f8fafc; 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            overflow-x: hidden;
-            margin: 0;
-            padding: 0;
+        /* --- STABLE GRID SYSTEM --- */
+        .app-shell { display: grid; grid-template-columns: 1fr; width: 100vw; }
+
+        @media (min-width: 1024px) {
+            .app-shell { grid-template-columns: 360px 1fr; height: 100vh; overflow: hidden; }
         }
 
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(40px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 2rem;
-            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        .sidebar { 
+            padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; 
+            background: rgba(255,255,255,0.01); border-right: 1px solid rgba(255,255,255,0.05);
+            overflow-y: auto; z-index: 10; width: 100%;
         }
-        .glass:hover {
-            border-color: rgba(0, 240, 255, 0.3);
-            background: rgba(255, 255, 255, 0.05);
+
+        .workspace { 
+            position: relative; display: flex; align-items: center; justify-content: center; 
+            padding: 2rem; background: #000; overflow: hidden; width: 100%;
+        }
+
+        @media (max-width: 1023px) {
+            .workspace { order: -1; min-height: 400px; padding: 1.5rem; }
+            .sidebar { padding: 2rem; }
+        }
+
+        /* --- UI COMPONENTS --- */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(50px);
+            border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.5rem; padding: 1.5rem;
         }
 
         .canvas-frame {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 16/9;
-            background: #000;
-            border-radius: 2rem;
-            overflow: hidden;
+            position: relative; 
+            width: 100%; height: auto;
+            max-width: 100%; max-height: 85vh;
+            aspect-ratio: var(--aspect);
+            background: #000; border-radius: 2.5rem; overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 40px 100px -20px rgba(0,0,0,0.8);
+            box-shadow: 0 50px 100px -20px rgba(0,0,0,0.9);
+            transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex; align-items: center; justify-content: center;
         }
 
-        @media (max-width: 767px) {
-            .canvas-frame { aspect-ratio: 4/5; border-radius: 1.5rem; }
+        @media (min-width: 1024px) {
+            .canvas-frame { height: 80vh; width: auto; max-width: 100%; }
+        }
+
+        @media (max-width: 1023px) {
+            .canvas-frame { max-height: 60vh; width: 100%; }
         }
 
         .mesh-point {
             position: absolute; width: 85%; height: 85%; border-radius: 50%;
-            filter: blur(120px); opacity: 0.6;
-            mix-blend-mode: screen;
-            will-change: transform, left, top;
+            filter: blur(120px); opacity: 0.7; mix-blend-mode: screen;
+            transition: background 0.8s, box-shadow 0.8s;
         }
 
-        .slider { -webkit-appearance: none; width: 100%; height: 2px; background: rgba(255,255,255,0.1); border-radius: 2px; outline: none; }
-        .slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fff; cursor: pointer; border: 2px solid var(--p1); box-shadow: 0 0 20px var(--p1-glow); transition: all 0.2s; }
-        .slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
-
-        .btn-primary {
-            background: #f8fafc; color: #020617;
-            font-weight: 800; font-style: italic; text-transform: uppercase;
-            padding: 1.25rem 2rem; border-radius: 1.25rem;
-            transition: all 0.3s; letter-spacing: 2px;
-            box-shadow: 0 20px 40px -10px rgba(255,255,255,0.1);
-        }
-        .btn-primary:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 25px 50px -10px rgba(255,255,255,0.2); }
+        .slider { -webkit-appearance: none; width: 100%; height: 2px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+        .slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; cursor: pointer; border: 3px solid var(--p1); }
 
         .pill {
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            padding: 0.5rem 1rem; border-radius: 2rem; font-size: 10px; font-weight: 800;
-            text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5);
-            transition: all 0.3s;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+            padding: 0.6rem 1.25rem; border-radius: 2rem; font-size: 10px; font-weight: 800;
+            text-transform: uppercase; color: rgba(255,255,255,0.4); transition: 0.2s;
         }
-        .pill.active { background: var(--p1-glow); color: var(--p1); border-color: var(--p1); }
+        .pill.active { background: #fff; color: #000; border-color: #fff; }
 
-        .grid-layout {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 2rem;
-            padding: 2rem;
+        .history-item {
+            width: 100%; aspect-ratio: 1/1; border-radius: 0.75rem; cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.1); transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            overflow: hidden;
         }
+        .history-item:hover { transform: scale(1.1); border-color: #fff; }
 
-        @media (min-width: 1024px) {
-            .grid-layout {
-                grid-template-columns: 1.4fr 0.6fr;
-                height: 100vh;
-                padding: 3rem;
-                overflow: hidden;
-            }
-            .scrollable-content { overflow-y: auto; padding-right: 1rem; }
+        .toast {
+            position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: #fff; color: #000; padding: 0.8rem 2rem; border-radius: 1rem;
+            font-size: 11px; font-weight: 900; z-index: 1000;
+            transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
+        .toast.show { transform: translateX(-50%) translateY(0); }
 
-        .grain-overlay {
-            position: absolute; inset: 0; z-index: 5; pointer-events: none; opacity: 0.15;
-            background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADl9mYvAAAABnRSTlMAmZmpzMxmZswzAAAAZElEQVQ4y2NgYGRiYmJiZGJmYWVjZWNnY+dg52DnYeXj5ePnE+AQEBAUERTkExQUFBYRFRMVExUTFRMVExcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFwk5Af0GHAAsAAAAAElFTkSuQmCC");
-        }
+        .grain-overlay { position: absolute; inset: 0; z-index: 5; pointer-events: none; opacity: 0.15; background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADl9mYvAAAABnRSTlMAmZmpzMxmZswzAAAAZElEQVQ4y2NgYGRiYmJiZGJmYWVjZWNnY+dg52DnYeXj5ePnE+AQEBAUERTkExQUFBYRFRMVExUTFRMVExcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFwk5Af0GHAAsAAAAAElFTkSuQmCC"); }
     </style>
 </head>
 <body>
 
-    <main class="grid-layout">
+    <div id="toast" class="toast">Update Successful</div>
+
+    <main class="app-shell">
         
-        <!-- Workspace / Preview -->
-        <section class="flex flex-col gap-8 h-full">
-            <!-- HUD -->
-            <div class="flex justify-between items-center px-2">
-                <div class="flex items-center gap-4">
-                    <div class="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_20px_#00f0ff] animate-pulse"></div>
-                    <h1 class="text-xl font-black italic tracking-tighter uppercase">Vasudev <span class="font-light opacity-30">Studio</span></h1>
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="flex items-center gap-3 mb-4">
+                <div id="status-glow" class="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_20px_#00f0ff] animate-pulse"></div>
+                <h1 class="text-xl font-black italic uppercase tracking-tighter">Vasudev <span class="font-light opacity-30">Studio</span></h1>
+            </div>
+
+            <!-- CHROMATIC -->
+            <div class="glass-card flex flex-col gap-6">
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] text-white/30 uppercase font-black tracking-widest">Chromatic</span>
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-3 bg-white/5 rounded-full px-3 py-1 border border-white/5">
+                            <button onclick="removePoint()" class="text-white/40 hover:text-white font-bold">-</button>
+                            <span id="point-count" class="text-[10px] font-black w-4 text-center">3</span>
+                            <button onclick="addPoint()" class="text-white/40 hover:text-white font-bold">+</button>
+                        </div>
+                        <button onclick="shufflePalette()" class="text-[10px] font-black uppercase text-cyan-400">Shuffle</button>
+                    </div>
                 </div>
-                <div class="flex gap-4">
-                    <button onclick="resetLab()" class="pill text-red-500/50 hover:text-red-500">Reset Lab</button>
-                    <button onclick="openTokens()" class="pill">Tokens</button>
+                <div class="flex items-center justify-between">
+                    <div class="flex gap-4">
+                        <input type="color" id="c1" value="#00f0ff" oninput="updateColors()" class="w-12 h-12 bg-transparent cursor-pointer rounded-full border-0">
+                        <input type="color" id="c2" value="#8b5cf6" oninput="updateColors()" class="w-12 h-12 bg-transparent cursor-pointer rounded-full border-0">
+                        <input type="color" id="c3" value="#020617" oninput="updateColors()" class="w-12 h-12 bg-transparent cursor-pointer rounded-full border-0">
+                    </div>
                 </div>
             </div>
 
-            <!-- Main Canvas -->
-            <div class="canvas-frame group" id="canvas-trigger">
+            <!-- COMPOSITION -->
+            <div class="glass-card flex flex-col gap-6">
+                <span class="text-[10px] text-white/30 uppercase font-black tracking-widest">Composition</span>
+                <div class="flex flex-col gap-6">
+                    <div class="flex flex-col gap-3">
+                        <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Format</span>
+                        <div class="flex gap-2">
+                            <button onclick="setRatio('16-9')" class="pill active" id="btn-16-9">Desktop</button>
+                            <button onclick="setRatio('9-16')" class="pill" id="btn-9-16">Story</button>
+                            <button onclick="setRatio('1-1')" class="pill" id="btn-1-1">Social</button>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-3">
+                        <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Texture</span>
+                        <input type="range" id="rg" min="0" max="60" value="15" class="slider" oninput="updatePhysics()">
+                    </div>
+                    <div class="flex flex-col gap-3">
+                        <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Overlays</span>
+                        <div class="flex gap-2">
+                            <button onclick="setPattern('none')" class="pill active" id="p-none">Clean</button>
+                            <button onclick="setPattern('dots')" class="pill" id="p-dots">Dots</button>
+                            <button onclick="setPattern('grid')" class="pill" id="p-grid">Grid</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EXPORT -->
+            <div class="flex flex-col gap-4">
+                <input type="text" id="asset-name" placeholder="studio-master-v3" class="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm font-bold text-white outline-none focus:border-white/20">
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="saveSnapshot()" class="py-5 rounded-2xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all">Save Lab</button>
+                    <button onclick="downloadImage()" class="py-5 rounded-2xl bg-white text-black text-[10px] font-black uppercase tracking-widest">Download</button>
+                </div>
+                <button onclick="copyCSS()" class="text-[9px] uppercase font-bold text-white/20 hover:text-white/50 tracking-widest text-center">Copy CSS Code</button>
+            </div>
+
+            <!-- HISTORY -->
+            <div id="history-section" class="glass-card flex flex-col gap-4 hidden">
+                <span class="text-[10px] text-white/30 uppercase font-black tracking-widest">Recent Labs</span>
+                <div id="history-grid" class="grid grid-cols-4 gap-3"></div>
+            </div>
+        </aside>
+
+        <!-- WORKSPACE -->
+        <section class="workspace">
+            <div class="canvas-frame" id="canvas-trigger">
                 <div class="mesh-container relative w-full h-full bg-black">
-                    <div id="m1" class="mesh-point" style="top: 10%; left: 10%; background: var(--p1);"></div>
-                    <div id="m2" class="mesh-point" style="top: 40%; right: 10%; background: var(--p2);"></div>
-                    <div id="m3" class="mesh-point" style="bottom: 10%; left: 20%; background: var(--p3);"></div>
+                    <div id="m1" class="mesh-point" style="top: 15%; left: 15%;"></div>
+                    <div id="m2" class="mesh-point" style="top: 45%; right: 15%;"></div>
+                    <div id="m3" class="mesh-point" style="bottom: 15%; left: 25%;"></div>
                     <div class="grain-overlay"></div>
-                    <div id="pattern" class="absolute inset-0 z-4 pointer-events-none opacity-0 transition-opacity duration-500"></div>
+                    <div id="pattern" class="absolute inset-0 z-4 pointer-events-none opacity-0 transition-opacity"></div>
                 </div>
-                <!-- Canvas Label -->
-                <div class="absolute bottom-8 left-8 z-10 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span class="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">Canvas Status</span>
-                    <span class="text-xs font-bold text-cyan-400">Physics Engine Active</span>
-                </div>
-            </div>
-
-            <!-- Quick Access (Mobile/Tablet) -->
-            <div class="flex lg:hidden gap-3 overflow-x-auto pb-4">
-                <button onclick="shufflePalette()" class="pill active">Shuffle Palette</button>
-                <button onclick="setQuality(4)" class="pill">4K Mode</button>
-                <button onclick="downloadImage()" class="pill !bg-white !text-black border-none">Quick Export</button>
             </div>
         </section>
 
-        <!-- Sidebar / Controls -->
-        <aside class="scrollable-content">
-            <div class="flex flex-col gap-6 pb-20">
-                
-                <!-- Section: Chromatic -->
-                <div class="glass p-8 flex flex-col gap-8">
-                    <div class="flex justify-between items-center">
-                        <span class="text-[10px] text-white/30 uppercase font-black tracking-widest">Chromatic Engine</span>
-                        <div class="flex items-center gap-4">
-                            <div class="flex items-center gap-2 bg-white/5 rounded-lg p-1 border border-white/5">
-                                <button onclick="removePoint()" class="w-6 h-6 flex items-center justify-center text-white/40 hover:text-white transition-colors">-</button>
-                                <span id="point-count" class="text-[10px] font-bold w-4 text-center">3</span>
-                                <button onclick="addPoint()" class="w-6 h-6 flex items-center justify-center text-white/40 hover:text-white transition-colors">+</button>
-                            </div>
-                            <button onclick="shufflePalette()" class="text-[10px] font-black uppercase text-cyan-400 hover:text-white transition-colors">Shuffle</button>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <div class="flex gap-4">
-                            <input type="color" id="c1" value="#00f0ff" onchange="updateColors()" class="w-12 h-12 bg-transparent cursor-pointer">
-                            <input type="color" id="c2" value="#8b5cf6" onchange="updateColors()" class="w-12 h-12 bg-transparent cursor-pointer">
-                            <input type="color" id="c3" value="#020617" onchange="updateColors()" class="w-12 h-12 bg-transparent cursor-pointer">
-                        </div>
-                        <div class="flex gap-2">
-                            <div class="w-8 h-8 rounded-full border border-white/10" style="background: #00f0ff" onclick="setPreset('#00f0ff', '#8b5cf6', '#020617')"></div>
-                            <div class="w-8 h-8 rounded-full border border-white/10" style="background: #f43f5e" onclick="setPreset('#f43f5e', '#fbbf24', '#0f172a')"></div>
-                            <div class="w-8 h-8 rounded-full border border-white/10" style="background: #10b981" onclick="setPreset('#10b981', '#3b82f6', '#020617')"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section: Dynamics -->
-                <div class="glass p-8 flex flex-col gap-8">
-                    <span class="text-[10px] text-white/30 uppercase font-black tracking-widest">Physics & Density</span>
-                    <div class="flex flex-col gap-8">
-                        <div class="flex flex-col gap-3">
-                            <div class="flex justify-between text-[10px] font-bold text-white/40 uppercase tracking-widest">
-                                <span>Grain Opacity</span>
-                                <span id="v-grain" class="text-white">15%</span>
-                            </div>
-                            <input type="range" id="rg" min="0" max="60" value="15" class="slider" oninput="updatePhysics()">
-                        </div>
-                        <div class="flex flex-col gap-3">
-                            <div class="flex justify-between text-[10px] font-bold text-white/40 uppercase tracking-widest">
-                                <span>Motion Speed</span>
-                                <span id="v-speed" class="text-white">20s</span>
-                            </div>
-                            <input type="range" id="rs" min="2" max="60" value="20" class="slider" oninput="updatePhysics()">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section: Composition -->
-                <div class="glass p-8 flex flex-col gap-8">
-                    <span class="text-[10px] text-white/30 uppercase font-black tracking-widest">Composition</span>
-                    <div class="flex flex-col gap-6">
-                        <div class="flex flex-col gap-4">
-                            <span class="text-[8px] font-bold text-white/20 uppercase tracking-widest">Overlays</span>
-                            <div class="flex gap-2">
-                                <button onclick="setPattern('none')" class="pill active" id="p-none">Clean</button>
-                                <button onclick="setPattern('dots')" class="pill" id="p-dots">Dots</button>
-                                <button onclick="setPattern('grid')" class="pill" id="p-grid">Grid</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Action: Export -->
-                <div class="flex flex-col gap-4 mt-4">
-                    <div class="flex gap-4">
-                        <input type="text" id="asset-name" placeholder="studio-export-01" class="flex-grow bg-white/5 border border-white/10 rounded-2xl p-5 text-sm font-bold text-white outline-none focus:border-cyan-400 transition-all">
-                        <button onclick="setQuality(4)" id="q-4" class="pill !py-0 !px-6 hover:bg-white hover:text-black">4K</button>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <button onclick="copyCSS()" class="py-4 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all">Copy CSS</button>
-                        <button onclick="downloadImage()" class="py-4 rounded-xl bg-white text-black text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all">Download PNG</button>
-                    </div>
-                </div>
-
-            </div>
-        </aside>
     </main>
 
     <script>
-        const rg = document.getElementById('rg'), rs = document.getElementById('rs');
-        const vg = document.getElementById('v-grain'), vs = document.getElementById('v-speed');
-        const trigger = document.getElementById('canvas-trigger');
-        const pattern = document.getElementById('pattern');
+        const rg = document.getElementById('rg');
+        const trigger = document.getElementById('canvas-trigger'), pattern = document.getElementById('pattern');
         const c1 = document.getElementById('c1'), c2 = document.getElementById('c2'), c3 = document.getElementById('c3');
+        const toast = document.getElementById('toast');
 
-        let points = [
-            { id: 'm1', x: 20, y: 20, vx: 0, vy: 0, tx: 20, ty: 20 },
-            { id: 'm2', x: 70, y: 30, vx: 0, vy: 0, tx: 70, ty: 30 },
-            { id: 'm3', x: 30, y: 70, vx: 0, vy: 0, tx: 30, ty: 70 }
-        ];
+        let points = [{ id: 'm1', x: 15, y: 15 }, { id: 'm2', x: 75, y: 25 }, { id: 'm3', x: 35, y: 75 }];
+
+        function showToast(msg) {
+            toast.innerText = msg; toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
 
         function animate() {
             points.forEach((p, i) => {
                 const el = document.getElementById(p.id);
                 if (el) {
-                    el.style.left = `${p.x}%`;
-                    el.style.top = `${p.y}%`;
-                    el.style.background = `var(--p${(i % 3) + 1})`;
+                    el.style.left = `${p.x}%`; el.style.top = `${p.y}%`;
+                    const colors = [c1.value, c2.value, c3.value];
+                    el.style.background = colors[i % 3];
+                    el.style.boxShadow = `0 0 160px ${colors[i % 3]}77`;
                 }
             });
         }
         animate();
 
+        window.updateColors = () => {
+            document.documentElement.style.setProperty('--p1', c1.value);
+            document.documentElement.style.setProperty('--p2', c2.value);
+            document.documentElement.style.setProperty('--p3', c3.value);
+            const glow = document.getElementById('status-glow');
+            if (glow) { glow.style.background = c1.value; glow.style.boxShadow = `0 0 20px ${c1.value}`; }
+            animate();
+        }
+
+        window.setRatio = (r) => {
+            const ratios = { '16-9': '16/9', '9-16': '9/16', '1-1': '1/1' };
+            document.documentElement.style.setProperty('--aspect', ratios[r]);
+            document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-${r}`).classList.add('active');
+            setTimeout(animate, 50); 
+        }
+
         window.addPoint = () => {
-            if (points.length >= 8) return;
-            const id = `m${points.length + 1}`;
-            const newPoint = { id, x: Math.random()*80 + 10, y: Math.random()*80 + 10 };
-            points.push(newPoint);
-            
+            if (points.length >= 10) return;
+            const nid = `m${Date.now()}`;
+            points.push({ id: nid, x: Math.random()*70 + 15, y: Math.random()*70 + 15 });
             const el = document.createElement('div');
-            el.id = id;
-            el.className = 'mesh-point';
+            el.id = nid; el.className = 'mesh-point';
             document.querySelector('.mesh-container').appendChild(el);
-            
             document.getElementById('point-count').innerText = points.length;
             animate();
         }
@@ -275,87 +256,77 @@
             const el = document.getElementById(p.id);
             if (el) el.remove();
             document.getElementById('point-count').innerText = points.length;
+            animate();
+        }
+
+        window.saveSnapshot = () => {
+            const state = { 
+                c1: c1.value, c2: c2.value, c3: c3.value, rg: rg.value, 
+                points: JSON.parse(JSON.stringify(points)), 
+                aspect: getComputedStyle(document.documentElement).getPropertyValue('--aspect').trim()
+            };
+            let history = JSON.parse(localStorage.getItem('v_history_v5') || '[]');
+            history.unshift(state); history = history.slice(0, 12);
+            localStorage.setItem('v_history_v5', JSON.stringify(history));
+            renderHistory(); showToast("Saved");
+        }
+
+        window.renderHistory = () => {
+            const history = JSON.parse(localStorage.getItem('v_history_v5') || '[]');
+            const grid = document.getElementById('history-grid'), section = document.getElementById('history-section');
+            if (history.length === 0) { section.classList.add('hidden'); return; }
+            section.classList.remove('hidden');
+            grid.innerHTML = history.map((s, i) => `<div onclick='loadSnapshot(${i})' class="history-item" style="background: radial-gradient(circle at 50% 50%, ${s.c1}, ${s.c2}, ${s.c3})"></div>`).join('');
+        }
+
+        window.loadSnapshot = (idx) => {
+            const history = JSON.parse(localStorage.getItem('v_history_v5') || '[]');
+            const s = history[idx]; if (!s) return;
+            c1.value = s.c1; c2.value = s.c2; c3.value = s.c3; rg.value = s.rg;
+            document.documentElement.style.setProperty('--aspect', s.aspect);
+            document.querySelectorAll('.mesh-point').forEach(el => el.remove());
+            points = JSON.parse(JSON.stringify(s.points));
+            points.forEach(p => {
+                const el = document.createElement('div'); el.id = p.id; el.className = 'mesh-point';
+                document.querySelector('.mesh-container').appendChild(el);
+            });
+            document.getElementById('point-count').innerText = points.length;
+            updateColors(); showToast("Restored");
         }
 
         window.copyCSS = () => {
             const colors = [c1.value, c2.value, c3.value];
             const gradient = `background-color: ${c3.value};\nbackground-image: \n  ${points.map((p, i) => `radial-gradient(at ${Math.round(p.x)}% ${Math.round(p.y)}%, ${colors[i % 3]} 0px, transparent 50%)`).join(',\n  ')};`;
-            navigator.clipboard.writeText(gradient);
-            alert("CSS Gradient Code Copied!");
+            navigator.clipboard.writeText(gradient); showToast("CSS Copied");
         }
 
         window.shufflePalette = () => {
             const randomHex = () => '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
-            setPreset(randomHex(), randomHex(), '#020205');
-        }
-
-        window.setRatio = (ratio) => {
-            trigger.style.aspectRatio = ratio.replace('-', '/');
-            document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('active'));
-            const btnId = `btn-${ratio}`;
-            if(document.getElementById(btnId)) document.getElementById(btnId).classList.add('active');
-        }
-
-        window.openTokens = () => {
-            const vars = `:root {\n  --p1: ${c1.value};\n  --p2: ${c2.value};\n  --p3: ${c3.value};\n  --grain: ${rg.value}%;\n  --points: ${points.length};\n}`;
-            alert("Design Tokens Copied to Clipboard!\n\n" + vars);
-            navigator.clipboard.writeText(vars);
-        }
-
-        window.updateColors = () => {
-            document.documentElement.style.setProperty('--p1', c1.value);
-            document.documentElement.style.setProperty('--p2', c2.value);
-            document.documentElement.style.setProperty('--p3', c3.value);
-            document.documentElement.style.setProperty('--p1-glow', c1.value + '33');
-        }
-
-        window.setPreset = (p1, p2, p3) => {
-            c1.value = p1; c2.value = p2; c3.value = p3;
-            updateColors();
-        }
-
-        window.updatePhysics = () => {
-            vg.innerText = rg.value + '%';
-            vs.innerText = rs.value + 's';
-            document.documentElement.style.setProperty('--grain-opacity', rg.value/100);
+            c1.value = randomHex(); c2.value = randomHex(); updateColors(); showToast("Shuffled");
         }
 
         window.setPattern = (type) => {
-            pattern.className = `absolute inset-0 z-4 pointer-events-none transition-opacity duration-500 opacity-100`;
+            pattern.className = `absolute inset-0 z-4 pointer-events-none transition-opacity opacity-100`;
             if (type === 'none') pattern.classList.add('opacity-0');
             if (type === 'dots') pattern.style.backgroundImage = 'radial-gradient(rgba(255,255,255,0.1) 1.5px, transparent 1.5px)';
             if (type === 'grid') pattern.style.backgroundImage = 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)';
             pattern.style.backgroundSize = '32px 32px';
-            
             document.querySelectorAll('[id^="p-"]').forEach(b => b.classList.remove('active'));
             document.getElementById(`p-${type}`).classList.add('active');
         }
 
-        let currentQuality = 1;
-        window.setQuality = (q) => {
-            currentQuality = q;
-            document.querySelectorAll('[id^="q-"]').forEach(b => b.classList.remove('active'));
-            document.getElementById(`q-${q}`).classList.add('active');
-        }
-
         window.downloadImage = function() {
-            const name = document.getElementById('asset-name').value || 'vasudev-studio-export';
+            const name = document.getElementById('asset-name').value || 'studio-export';
             domtoimage.toPng(trigger, {
-                width: trigger.offsetWidth * currentQuality,
-                height: trigger.offsetHeight * currentQuality,
-                style: { transform: `scale(${currentQuality})`, transformOrigin: 'top left', width: `${trigger.offsetWidth}px`, height: `${trigger.offsetHeight}px` }
-            }).then(dataUrl => {
-                const link = document.createElement('a');
-                link.download = `${name}.png`; link.href = dataUrl; link.click();
-            });
+                width: trigger.offsetWidth * 4, height: trigger.offsetHeight * 4,
+                style: { transform: `scale(4)`, transformOrigin: 'top left', width: `${trigger.offsetWidth}px`, height: `${trigger.offsetHeight}px` }
+            }).then(url => { const link = document.createElement('a'); link.download = `${name}.png`; link.href = url; link.click(); showToast("Exporting PNG"); });
         }
 
-        window.resetLab = () => {
-            setPreset('#00f0ff', '#8b5cf6', '#020617');
-            rg.value = 15; rs.value = 20;
-            updatePhysics();
-            setPattern('none');
-        }
+        window.updatePhysics = () => { document.documentElement.style.setProperty('--grain-opacity', rg.value/100); }
+        window.resetLab = () => { c1.value = '#00f0ff'; c2.value = '#8b5cf6'; c3.value = '#020617'; rg.value = 15; updatePhysics(); setPattern('none'); setRatio('16-9'); updateColors(); showToast("Reset"); }
+
+        updateColors(); renderHistory();
     </script>
 </body>
 </html>
